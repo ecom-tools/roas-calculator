@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce ROAS & Profit Margin Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #10b981;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .result-box {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border-left: 4px solid var(--accent);
+        }
+        .result-val {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        #chartContainer {
+            margin-top: 20px;
+            height: 200px;
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+<body>
+<div class="container">
+    <h1>E-com Profit Calculator</h1>
+    
+    <div class="card">
+        <div class="input-group">
+            <label>Product Cost ($ per unit)</label>
+            <input type="number" id="prodCost" value="10" step="0.01">
+        </div>
+        <div class="input-group">
+            <label>Selling Price ($ per unit)</label>
+            <input type="number" id="sellPrice" value="30" step="0.01">
+        </div>
+        <div class="input-group">
+            <label>Total Ad Spend ($)</label>
+            <input type="number" id="adSpend" value="150" step="0.01">
+        </div>
+        <div class="input-group">
+            <label>Total Units Sold</label>
+            <input type="number" id="unitsSold" value="15">
+        </div>
+        <button onclick="calculateMetrics()">Calculate Profit</button>
+    </div>
+
+    <div class="card" id="resultsCard" style="display: none;">
+        <h3>Your Metrics</h3>
+        <div class="result-grid">
+            <div class="result-box">
+                <label>Revenue</label>
+                <div class="result-val" id="resRev">$0.00</div>
+            </div>
+            <div class="result-box">
+                <label>Net Profit</label>
+                <div class="result-val" id="resProfit">$0.00</div>
+            </div>
+            <div class="result-box">
+                <label>ROAS</label>
+                <div class="result-val" id="resROAS">0.0x</div>
+            </div>
+            <div class="result-box">
+                <label>Margin</label>
+                <div class="result-val" id="resMargin">0%</div>
+            </div>
+        </div>
+        <div id="chartContainer">
+            <canvas id="profitChart"></canvas>
+        </div>
+    </div>
+</div>
+       <div class="card seo-content" style="margin-top: 30px; text-align: left; line-height: 1.6;">
+        <h2 style="color: var(--accent); font-size: 1.3rem;">How to Calculate E-commerce ROAS</h2>
+        <p>Return on Ad Spend (ROAS) is the heartbeat metric for your digital marketing. It measures the revenue generated for every dollar spent on advertising campaigns like Meta, TikTok, or Google Ads.</p>
+        
+        <h3 style="color: var(--text); font-size: 1.1rem;">The ROAS Formula</h3>
+        <p>The standard ROAS formula is simple: <strong>Total Revenue from Ads ÷ Total Ad Spend = ROAS</strong>. For example, if you spend $150 on ads and generate $450 in sales, your ROAS is 3.0x (or 300%).</p>
+        
+        <h3 style="color: var(--text); font-size: 1.1rem;">What is a Good ROAS for E-commerce?</h3>
+        <p>A "good" ROAS depends entirely on your profit margins. While a 4:1 ROAS is generally considered a solid benchmark in e-commerce, stores with low product costs (high margins) might be highly profitable at a 2.5x ROAS, whereas stores with thin margins might need a 4.5x ROAS just to break even.</p>
+        
+        <h3 style="color: var(--text); font-size: 1.1rem;">Why Profit Margin Matters More</h3>
+        <p>You cannot eat ROAS; you eat profit. That's why this calculator combines your Product Cost with your ad spend. By knowing your Net Profit, you can determine your exact Break-Even ROAS and scale your ad budgets without losing money.</p>
+    </div>
+<script>let chartInstance = null;
+// Register the datalabels plugin
+Chart.register(ChartDataLabels);
+
+function calculateMetrics() {
+    const cost = parseFloat(document.getElementById('prodCost').value) || 0;
+    const price = parseFloat(document.getElementById('sellPrice').value) || 0;
+    const spend = parseFloat(document.getElementById('adSpend').value) || 0;
+    const qty = parseInt(document.getElementById('unitsSold').value) || 0;
+
+    const revenue = price * qty;
+    const cogs = cost * qty; 
+    const totalExpenses = cogs + spend;
+    const netProfit = revenue - totalExpenses;
+    const roas = spend > 0 ? (revenue / spend).toFixed(2) : 0;
+    const margin = revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : 0;
+
+    document.getElementById('resRev').innerText = '$' + revenue.toFixed(2);
+    document.getElementById('resProfit').innerText = '$' + netProfit.toFixed(2);
+    document.getElementById('resProfit').style.color = netProfit >= 0 ? '#10b981' : '#ef4444';
+    document.getElementById('resROAS').innerText = roas + 'x';
+    document.getElementById('resMargin').innerText = margin + '%';
+
+    document.getElementById('resultsCard').style.display = 'block';
+
+    const ctx = document.getElementById('profitChart').getContext('2d');
+    if (chartInstance) { chartInstance.destroy(); }
+    
+    // We only want to show data on the chart if there is revenue
+    const chartData = [spend, cogs, netProfit > 0 ? netProfit : 0];
+    const totalForChart = chartData.reduce((a, b) => a + b, 0);
+
+    chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Ad Spend', 'Product Cost', 'Net Profit'],
+            datasets: [{
+                data: chartData,
+                backgroundColor: ['#ef4444', '#3b82f6', '#10b981'],
+                borderWidth: 0
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#f8fafc' } },
+                datalabels: {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 14 },
+                    formatter: (value) => {
+                        if (value === 0 || totalForChart === 0) return null;
+                        let percentage = ((value / totalForChart) * 100).toFixed(1) + "%";
+                        return percentage;
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+</body>
+</html>
