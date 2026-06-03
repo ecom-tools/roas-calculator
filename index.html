@@ -71,6 +71,14 @@
             font-size: 1rem;
             cursor: pointer;
             margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .btn-secondary {
+            background: #475569;
+            margin-top: 15px;
         }
         .result-grid {
             display: grid;
@@ -133,14 +141,21 @@
                 <div class="result-val" id="resProfit">$0.00</div>
             </div>
             <div class="result-box">
-                <label>ROAS</label>
+                <label>Current ROAS</label>
                 <div class="result-val" id="resROAS">0.0x</div>
             </div>
-            <div class="result-box">
-                <label>Margin</label>
+            <div class="result-box" style="border-left-color: #3b82f6;">
+                <label>Break-Even ROAS</label>
+                <div class="result-val" id="resBeROAS" style="color: #3b82f6;">0.0x</div>
+            </div>
+            <div class="result-box" style="grid-column: span 2;">
+                <label>Net Profit Margin</label>
                 <div class="result-val" id="resMargin">0%</div>
             </div>
         </div>
+        
+        <button id="copyBtn" class="btn-secondary" onclick="copyResults()">📋 Copy Results for Chat</button>
+
         <div id="chartContainer">
             <canvas id="profitChart"></canvas>
         </div>
@@ -163,6 +178,8 @@
 // Register the datalabels plugin
 Chart.register(ChartDataLabels);
 
+let exportText = "";
+
 function calculateMetrics() {
     const cost = parseFloat(document.getElementById('prodCost').value) || 0;
     const price = parseFloat(document.getElementById('sellPrice').value) || 0;
@@ -175,19 +192,26 @@ function calculateMetrics() {
     const netProfit = revenue - totalExpenses;
     const roas = spend > 0 ? (revenue / spend).toFixed(2) : 0;
     const margin = revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : 0;
+    
+    // Calculate Break-Even ROAS: Price / Gross Profit per unit
+    const grossProfitPerUnit = price - cost;
+    const breakEvenRoas = grossProfitPerUnit > 0 ? (price / grossProfitPerUnit).toFixed(2) : "N/A";
 
     document.getElementById('resRev').innerText = '$' + revenue.toFixed(2);
     document.getElementById('resProfit').innerText = '$' + netProfit.toFixed(2);
     document.getElementById('resProfit').style.color = netProfit >= 0 ? '#10b981' : '#ef4444';
     document.getElementById('resROAS').innerText = roas + 'x';
+    document.getElementById('resBeROAS').innerText = breakEvenRoas + (grossProfitPerUnit > 0 ? 'x' : '');
     document.getElementById('resMargin').innerText = margin + '%';
+
+    // Store metrics in plain text for clipboard sharing
+    exportText = `📊 My E-com Ad Metrics:\n• Revenue: $${revenue.toFixed(2)}\n• Net Profit: $${netProfit.toFixed(2)}\n• Current ROAS: ${roas}x\n• Break-Even ROAS: ${breakEvenRoas}x\n• Profit Margin: ${margin}%\nCalculated free at: ${window.location.href}`;
 
     document.getElementById('resultsCard').style.display = 'block';
 
     const ctx = document.getElementById('profitChart').getContext('2d');
     if (chartInstance) { chartInstance.destroy(); }
     
-    // We only want to show data on the chart if there is revenue
     const chartData = [spend, cogs, netProfit > 0 ? netProfit : 0];
     const totalForChart = chartData.reduce((a, b) => a + b, 0);
 
@@ -219,6 +243,17 @@ function calculateMetrics() {
         }
     });
 }
+
+function copyResults() {
+    if (!exportText) return;
+    navigator.clipboard.writeText(exportText).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const oldText = btn.innerText;
+        btn.innerText = "✅ Copied to Clipboard!";
+        setTimeout(() => { btn.innerText = oldText; }, 2000);
+    });
+}
 </script>
 </body>
 </html>
+
